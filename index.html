@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peta Tematik Persebaran Rumah Makan Arjowinangun</title>
+    <meta
+      name="description"
+      content="WebGIS Interaktif Persebaran Rumah Makan di Kelurahan Arjowinangun, Kota Malang"
+    />
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+      :root {
+        --primary: #2563eb;
+        --primary-light: #3b82f6;
+        --secondary: #0d9488;
+        --accent: #f59e0b;
+        --gray-100: #f8fafc;
+        --gray-200: #e2e8f0;
+        --gray-700: #334155;
+        --gray-900: #0f172a;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+        --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+        --radius: 16px;
+        --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        --bg-body: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        --bg-section: white;
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+      }
+
+      /* Dark Mode Variables */
+      body.dark-mode {
+        --primary: #3b82f6;
+        --primary-light: #60a5fa;
+        --secondary: #14b8a6;
+        --gray-100: #1e293b;
+        --gray-200: #334155;
+        --gray-700: #cbd5e1;
+        --gray-900: #f1f5f9;
+        --bg-body: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        --bg-section: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.6);
+      }
+
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg-body);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        transition: background 0.3s ease, color 0.3s ease;
+      }
+
+      /* Sticky Header Bar */
+      .sticky-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transition: var(--transition);
+      }
+
+      body.dark-mode .sticky-header {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border-bottom: 1px solid #334155;
+      }
+
+      .sticky-header.scrolled {
+        padding: 0.7rem 2rem;
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+      }
+
+      .header-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: white;
+        font-family: "Poppins", sans-serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+        text-decoration: none;
+      }
+
+      .header-logo i {
+        font-size: 1.5rem;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .dark-mode-toggle {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 50px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: var(--transition);
+      }
+
+      .dark-mode-toggle:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .dark-mode-toggle i {
+        font-size: 1.1rem;
+      }
+
+      /* Header */
+      header {
+        background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+        color: white;
+        padding: 8rem 1rem 4rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        margin-top: 70px;
+      }
+
+      body.dark-mode header {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.08" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,133.3C672,117,768,139,864,170.7C960,203,1056,245,1152,245.3C1248,245,1344,203,1392,181.3L1440,160L1440,320L0,320Z"></path></svg>')
+          bottom no-repeat;
+        background-size: cover;
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+      }
+
+      h1 {
+        font-family: "Poppins", sans-serif;
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .subtitle {
+        font-size: clamp(1rem, 3vw, 1.3rem);
+        opacity: 0.95;
+        max-width: 800px;
+        margin: 0 auto;
+        font-weight: 300;
+      }
+
+      /* Container */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+
+      /* Section */
+      .section {
+        background: var(--bg-section);
+        border-radius: var(--radius);
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+      }
+
+      body.dark-mode .section {
+        border: 1px solid #334155;
+      }
+
+      .section::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        background: linear-gradient(to bottom, var(--primary), var(--secondary));
+      }
+
+      .section:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      h2 {
+        font-family: "Poppins", sans-serif;
+        color: var(--primary);
+        font-size: clamp(1.5rem, 4vw, 1.9rem);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      h2 i {
+        color: var(--secondary);
+        font-size: 1.4em;
+      }
+
+      p {
+        color: var(--text-secondary);
+      }
+
+      /* Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #ffffff, #f8fafc);
+        padding: 1.5rem;
+        border-radius: var(--radius);
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+      }
+
+      body.dark-mode .stat-card {
+        background: linear-gradient(135deg, #334155, #1e293b);
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow);
+      }
+
+      .stat-number {
+        font-size: clamp(2.2rem, 5vw, 3rem);
+        font-weight: 700;
+        color: var(--primary);
+        font-family: "Poppins", sans-serif;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .stat-label {
+        color: var(--gray-700);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+      }
+
+      /* Benefits */
+      .benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.2rem;
+        margin-top: 1.5rem;
+      }
+
+      .benefit-card {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border-radius: var(--radius);
+        padding: 1.6rem;
+        border-left: 5px solid var(--primary);
+        transition: var(--transition);
+      }
+
+      body.dark-mode .benefit-card {
+        background: linear-gradient(135deg, #1e293b, #334155);
+      }
+
+      .benefit-card:hover {
+        transform: translateX(8px);
+        box-shadow: var(--shadow);
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      }
+
+      body.dark-mode .benefit-card:hover {
+        background: linear-gradient(135deg, #334155, #475569);
+      }
+
+      .benefit-card h3 {
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0.8rem;
+        font-size: 1.15rem;
+      }
+
+      .benefit-card p {
+        color: var(--text-secondary);
+      }
+
+      /* Layout Peta Preview */
+      .layout-preview {
+        position: relative;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        margin: 2rem 0;
+        cursor: zoom-in;
+      }
+
+      .layout-preview img {
+        width: 100%;
+        height: auto;
+        display: block;
+        transition: transform 0.5s ease;
+      }
+
+      .layout-preview:hover img {
+        transform: scale(1.03);
+      }
+
+      /* Modal Popup Gambar */
+      .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.95);
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .image-modal-content {
+        position: relative;
+        max-width: 95%;
+        max-height: 95vh;
+        text-align: center;
+      }
+
+      #modalImage {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      }
+
+      .image-modal-close {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        background: rgba(0,0,0,0.7);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10000;
+        transition: all 0.3s;
+      }
+
+      .image-modal-close:hover {
+        background: rgba(220,38,38,0.9);
+        transform: scale(1.1);
+      }
+
+      @media (max-width: 768px) {
+        .image-modal-close {
+          top: 10px;
+          right: 10px;
+          width: 44px;
+          height: 44px;
+          font-size: 36px;
+        }
+      }
+
+      /* Map Preview */
+      .map-preview {
+        position: relative;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        margin: 2rem 0;
+        cursor: pointer;
+        aspect-ratio: 16 / 9;
+      }
+
+      .map-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+      }
+
+      .map-preview:hover img {
+        transform: scale(1.08);
+      }
+
+      .map-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(13, 148, 136, 0.95));
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: var(--transition);
+        color: white;
+        text-align: center;
+        padding: 2rem;
+        backdrop-filter: blur(4px);
+      }
+
+      .map-preview:hover .map-overlay {
+        opacity: 1;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 28px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+        cursor: pointer;
+        border: none;
+        font-size: 1rem;
+        min-height: 52px;
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+      }
+
+      .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+      }
+
+      .btn-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+        justify-items: center;
+      }
+
+      /* Facilities List */
+      .facilities-list {
+        max-height: 420px;
+        overflow-y: auto;
+        background: var(--gray-100);
+        border-radius: var(--radius);
+        padding: 0.8rem;
+        border: 1px solid var(--gray-200);
+      }
+
+      .facility-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+        border-radius: 10px;
+        margin-bottom: 0.6rem;
+        transition: var(--transition);
+      }
+
+      .facility-item:hover {
+        background: var(--bg-section);
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-2px);
+      }
+
+      .facility-icon {
+        color: var(--primary);
+        font-size: 1.4rem;
+        margin-top: 0.15rem;
+        flex-shrink: 0;
+      }
+
+      .facility-content {
+        flex: 1;
+      }
+
+      .facility-name {
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 1.05rem;
+      }
+
+      .facility-address {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 0.3rem;
+      }
+
+      .facility-link {
+        margin-top: 0.5rem;
+        display: inline-block;
+        color: var(--secondary);
+        font-size: 0.85rem;
+        text-decoration: none;
+      }
+
+      .facility-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Profile */
+      .profile {
+        text-align: center;
+        padding: 2rem 1rem;
+      }
+      .profile-img {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 3rem;
+        color: white;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .contact-info {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.8rem;
+        margin-top: 1.5rem;
+      }
+
+      .contact-link {
+        padding: 0.8rem 1.4rem;
+        background: var(--bg-section);
+        color: var(--primary);
+        border-radius: 50px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+        font-size: 0.95rem;
+        min-width: 140px;
+        border: 1px solid var(--gray-200);
+      }
+
+      .contact-link:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-3px);
+      }
+
+      /* Footer */
+      footer {
+        background: var(--gray-900);
+        color: white;
+        text-align: center;
+        padding: 3rem 1rem;
+        margin-top: 4rem;
+        font-size: 0.95rem;
+      }
+
+      body.dark-mode footer {
+        background: #0f172a;
+        border-top: 1px solid #1e293b;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .sticky-header {
+          padding: 0.8rem 1rem;
+        }
+
+        .header-logo {
+          font-size: 1rem;
+        }
+
+        .header-logo span {
+          display: none;
+        }
+
+        .dark-mode-toggle span {
+          display: none;
+        }
+
+        .dark-mode-toggle {
+          padding: 0.6rem;
+          min-width: 44px;
+        }
+
+        header {
+          padding: 6rem 1rem 3rem;
+          margin-top: 60px;
+        }
+
+        .image-modal-close {
+          top: 10px;
+          right: 10px;
+          width: 44px;
+          height: 44px;
+          font-size: 36px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container { padding: 1rem; }
+        .btn-group { grid-template-columns: 1fr; }
+        .benefits-grid { grid-template-columns: 1fr; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+      }
+
+      @media (min-width: 768px) {
+        .btn { width: auto; }
+        .btn-group { grid-template-columns: repeat(3, max-content); }
+      }
+
+      @media (min-width: 1024px) {
+        .stats-grid { grid-template-columns: repeat(4, 1fr); }
+        .benefits-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sticky Header Bar -->
+    <div class="sticky-header" id="stickyHeader">
+      <a href="#" class="header-logo">
+        <i class="fas fa-utensils"></i>
+        <span>Peta Rumah Makan Arjowinangun</span>
+      </a>
+      <div class="header-actions">
+        <button class="dark-mode-toggle" id="darkModeToggle">
+          <i class="fas fa-moon"></i>
+          <span>Dark Mode</span>
+        </button>
+      </div>
+    </div>
+
+    <header>
+      <div class="header-content">
+        <h1>Peta Tematik Persebaran Rumah Makan</h1>
+        <p class="subtitle">
+          WebGIS Interaktif di Kelurahan Arjowinangun, Kota Malang
+        </p>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- Deskripsi Proyek -->
+      <section class="section">
+        <h2><i class="fas fa-info-circle"></i> Deskripsi Proyek</h2>
+        <p>
+          Kelurahan Arjowinangun merupakan wilayah di Kota Malang dengan aktivitas ekonomi lokal yang cukup berkembang, khususnya pada sektor kuliner. Peta tematik ini menampilkan persebaran rumah makan di Kelurahan Arjowinangun untuk memberikan gambaran spasial mengenai lokasi tempat makan terhadap jaringan jalan dan batas wilayah, sebagai informasi pendukung analisis dan perencanaan wilayah.
+        </p>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">Rumah Makan</div></div>
+          <div class="stat-card"><div class="stat-number">5</div><div class="stat-label">Layer Peta</div></div>
+          <div class="stat-card"><div class="stat-number">100%</div><div class="stat-label">Data Terverifikasi</div></div>
+          <div class="stat-card"><div class="stat-number">24/7</div><div class="stat-label">Akses Online</div></div>
+        </div>
+      </section>
+
+      <!-- Tujuan & Manfaat -->
+      <section class="section">
+        <h2><i class="fas fa-bullseye"></i> Tujuan & Manfaat</h2>
+        <div class="benefits-grid">
+          <div class="benefit-card"><h3><i class="fas fa-utensils"></i> Identifikasi Sebaran</h3><p>Memetakan distribusi rumah makan di wilayah Arjowinangun.</p></div>
+          <div class="benefit-card"><h3><i class="fas fa-map-marked-alt"></i> Analisis Aksesibilitas</h3><p>Menganalisis kemudahan akses berdasarkan jaringan jalan.</p></div>
+          <div class="benefit-card"><h3><i class="fas fa-chart-line"></i> Perencanaan Usaha</h3><p>Mendukung pengambilan keputusan lokasi usaha kuliner baru.</p></div>
+          <div class="benefit-card"><h3><i class="fas fa-users"></i> Informasi Publik</h3><p>Memberikan informasi lokasi rumah makan kepada masyarakat.</p></div>
+          <div class="benefit-card"><h3><i class="fas fa-database"></i> Basis Data Spasial</h3><p>Menyediakan data spasial untuk keperluan penelitian.</p></div>
+          <div class="benefit-card"><h3><i class="fas fa-search-location"></i> Pemantauan Wilayah</h3><p>Memantau perkembangan usaha kuliner dari waktu ke waktu.</p></div>
+        </div>
+      </section>
+
+      <!-- Layout Peta -->
+      <section class="section">
+        <h2><i class="fas fa-image"></i> Layout Peta</h2>
+        <p>
+          Berikut adalah tampilan layout peta tematik yang menunjukkan persebaran rumah makan beserta elemen kartografi pendukung seperti batas kelurahan, jaringan jalan, dan legenda.
+        </p>
+        <div class="layout-preview" id="layoutTrigger">
+          <img src="images/layout-tempat-makan-arjowinangun.jpg" alt="Layout Peta Tematik Persebaran Rumah Makan Kelurahan Arjowinangun" />
+        </div>
+      </section>
+
+      <!-- Peta Interaktif -->
+      <section class="section">
+        <h2><i class="fas fa-map-marked-alt"></i> Peta Interaktif</h2>
+        <p>
+          Klik gambar di bawah untuk membuka peta tematik interaktif lengkap dengan fitur pencarian, pengukuran, dan popup informasi.
+        </p>
+
+        <div class="map-preview" onclick="window.open('map.html', '_blank')">
+          <img src="images/preview-webgis.png" alt="Preview Peta Arjowinangun" />
+          <div class="map-overlay">
+            <h3><i class="fas fa-external-link-alt"></i> Buka Peta Interaktif</h3>
+            <p>Jelajahi 10 rumah makan dengan layer peta lengkap</p>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <a href="map.html" target="_blank" class="btn btn-primary"><i class="fas fa-map"></i> Buka Peta Sekarang</a>
+          <button class="btn btn-outline" id="downloadDataBtn"><i class="fas fa-download"></i> Unduh Data</button>
+          <button class="btn btn-outline" id="downloadAnalysisBtn"><i class="fas fa-file-pdf"></i> Laporan Analisis</button>
+        </div>
+
+        <!-- Daftar Rumah Makan -->
+        <h3 style="margin: 2rem 0 1rem; color: var(--primary)">Daftar Rumah Makan</h3>
+        <div class="facilities-list">
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">RUMAH MAKAN AMPERA RODA BARU</div>
+              <div class="facility-address">Jl. Raya Arjowinangun No.3, Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/wESiqiPg2U1PnC6d7" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Warung Sadar Jaya</div>
+              <div class="facility-address">Jl. Raya Arjowinangun No.07, Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65133</div>
+              <a href="https://maps.app.goo.gl/t53yn1eeTm2zTpfZ7" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Nasi Uduk Betawi</div>
+              <div class="facility-address">Jl. Raya Arjowinangun Kecamatan No.22 B, Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/gQJrXRaE2wp5jsL56" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Warung Nasi Goreng Bang Mamad</div>
+              <div class="facility-address">Jl. Raya Wonorejo No.56, Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/w1NEHasrfbvGs7v76" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">RUMAH MAKAN PADANG SELERA BERSAMA</div>
+              <div class="facility-address">Jalan mayjen sungkono, Arjowinangun, Kecamatan Kedungkandang, Tlogowaru, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/twzZif1ukweK4Yvg7" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Warung Uleg Mbak Anggun</div>
+              <div class="facility-address">Jl. Mayjen Sungkono No.6, Buring, Kec. Kedungkandang, Kota Malang, Jawa Timur 65135</div>
+              <a href="https://maps.app.goo.gl/PioYXDNwqNPd3pns8" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Nasi Goreng Raja Rasa</div>
+              <div class="facility-address">Jl. Mayjen Sungkono, Tlogowaru, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/Fyjny5c8GcxukY9D6" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Warung lalapan nasi uduk</div>
+              <div class="facility-address">Jl. Raya Arjowinangun No.26, Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/eoUPwkLh1SYbUZFH6" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Nasi Bu Putu</div>
+              <div class="facility-address">Jl. Puri Cemp. Putih No.V-2, Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/FrJEM6Vo9U2CZjFA8" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+          <div class="facility-item">
+            <div class="facility-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="facility-content">
+              <div class="facility-name">Warung nasi mbak al</div>
+              <div class="facility-address">Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132</div>
+              <a href="https://maps.app.goo.gl/ZVpw2KYxvVp3vDPM7" target="_blank" class="facility-link"><i class="fas fa-external-link-alt"></i> Lihat di Maps</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profil Pembuat -->
+      <section class="section">
+        <h2><i class="fas fa-user-graduate"></i> Profil Pembuat</h2>
+        <div class="profile">
+          <div class="profile-img">AM</div>
+          <h3>Abdulloh Mun'am</h3>
+          <p>NIM: 23201292</p>
+          <img src="images/logo-asia.png" alt="ITB ASIA Malang" style="height: 80px; margin: 1rem 0; border-radius: 12px" />
+          <p><em>Institut Teknologi dan Bisnis ASIA Malang</em></p>
+          <div class="contact-info">
+            <a href="https://instagram.com/yourusername" target="_blank" class="contact-link"><i class="fab fa-instagram"></i> Instagram</a>
+            <a href="https://wa.me/6281234567890" target="_blank" class="contact-link"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+            <a href="mailto:your.email@example.com" target="_blank" class="contact-link"><i class="fas fa-envelope"></i> Email</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Popup Gambar Layout Peta -->
+    <div id="imageModal" class="image-modal">
+      <div class="image-modal-content">
+        <span class="image-modal-close">×</span>
+        <img src="images/layout-tempat-makan-arjowinangun.jpg" id="modalImage" alt="Layout Peta Full" />
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2025 Peta Tematik Persebaran Rumah Makan Kelurahan Arjowinangun</p>
+      <p>Dibuat dengan ❤️ untuk mendukung perkembangan ekonomi lokal sektor kuliner</p>
+      <p style="margin-top: 0.5rem; opacity: 0.8">Institut Teknologi dan Bisnis ASIA Malang</p>
+    </footer>
+
+    <script>
+      // Data rumah makan
+      const facilitiesData = [
+        {
+          nama: "RUMAH MAKAN AMPERA RODA BARU",
+          alamat: "Jl. Raya Arjowinangun No.3, Arjowinangun",
+          link: "https://maps.app.goo.gl/wESiqiPg2U1PnC6d7",
+        },
+        {
+          nama: "Warung Sadar Jaya",
+          alamat: "Jl. Raya Arjowinangun No.07, Arjowinangun",
+          link: "https://maps.app.goo.gl/t53yn1eeTm2zTpfZ7",
+        },
+        {
+          nama: "Nasi Uduk Betawi",
+          alamat: "Jl. Raya Arjowinangun Kecamatan No.22 B, Arjowinangun",
+          link: "https://maps.app.goo.gl/gQJrXRaE2wp5jsL56",
+        },
+        {
+          nama: "Warung Nasi Goreng Bang Mamad",
+          alamat: "Jl. Raya Wonorejo No.56, Arjowinangun",
+          link: "https://maps.app.goo.gl/w1NEHasrfbvGs7v76",
+        },
+        {
+          nama: "RUMAH MAKAN PADANG SELERA BERSAMA",
+          alamat: "Jalan mayjen sungkono, Arjowinangun",
+          link: "https://maps.app.goo.gl/twzZif1ukweK4Yvg7",
+        },
+        {
+          nama: "Warung Uleg Mbak Anggun",
+          alamat: "Jl. Mayjen Sungkono No.6, Buring",
+          link: "https://maps.app.goo.gl/PioYXDNwqNPd3pns8",
+        },
+        {
+          nama: "Nasi Goreng Raja Rasa",
+          alamat: "Jl. Mayjen Sungkono, Tlogowaru",
+          link: "https://maps.app.goo.gl/Fyjny5c8GcxukY9D6",
+        },
+        {
+          nama: "Warung lalapan nasi uduk",
+          alamat: "Jl. Raya Arjowinangun No.26, Arjowinangun",
+          link: "https://maps.app.goo.gl/eoUPwkLh1SYbUZFH6",
+        },
+        {
+          nama: "Nasi Bu Putu",
+          alamat: "Jl. Puri Cemp. Putih No.V-2, Arjowinangun",
+          link: "https://maps.app.goo.gl/FrJEM6Vo9U2CZjFA8",
+        },
+        {
+          nama: "Warung nasi mbak al",
+          alamat: "Arjowinangun, Kec. Kedungkandang",
+          link: "https://maps.app.goo.gl/ZVpw2KYxvVp3vDPM7",
+        },
+      ];
+
+      function animateValue(el, start, end, duration, suffix = "") {
+        let startTime = null;
+        const animation = (currentTime) => {
+          if (!startTime) startTime = currentTime;
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 4);
+          const value = Math.floor(ease * (end - start) + start);
+          el.textContent = value + suffix;
+          if (progress < 1) requestAnimationFrame(animation);
+        };
+        requestAnimationFrame(animation);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+        const icon = darkModeToggle.querySelector('i');
+        const text = darkModeToggle.querySelector('span');
+
+        // Check saved preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+          body.classList.add('dark-mode');
+          icon.classList.replace('fa-moon', 'fa-sun');
+          if (text) text.textContent = 'Light Mode';
+        }
+
+        darkModeToggle.addEventListener('click', () => {
+          body.classList.toggle('dark-mode');
+          
+          if (body.classList.contains('dark-mode')) {
+            icon.classList.replace('fa-moon', 'fa-sun');
+            if (text) text.textContent = 'Light Mode';
+            localStorage.setItem('darkMode', 'enabled');
+          } else {
+            icon.classList.replace('fa-sun', 'fa-moon');
+            if (text) text.textContent = 'Dark Mode';
+            localStorage.setItem('darkMode', 'disabled');
+          }
+        });
+
+        // Sticky Header on Scroll
+        const stickyHeader = document.getElementById('stickyHeader');
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 100) {
+            stickyHeader.classList.add('scrolled');
+          } else {
+            stickyHeader.classList.remove('scrolled');
+          }
+        });
+
+        document.getElementById("downloadDataBtn").addEventListener("click", exportDataToPDF);
+        document.getElementById("downloadAnalysisBtn").addEventListener("click", exportAnalysisToPDF);
+
+        const statsSection = document.querySelector(".section:first-of-type");
+        const statsObserver = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            const nums = document.querySelectorAll(".stat-number");
+            animateValue(nums[0], 0, 10, 2000, "");
+            animateValue(nums[1], 0, 5, 2000, "");
+            animateValue(nums[2], 0, 100, 2200, "%");
+            animateValue(nums[3], 0, 24, 2200, "/7");
+            statsObserver.unobserve(statsSection);
+          }
+        }, { threshold: 0.5 });
+        statsObserver.observe(statsSection);
+
+        // Popup Layout Peta
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        const trigger = document.getElementById("layoutTrigger");
+        const closeBtn = document.querySelector(".image-modal-close");
+
+        trigger.addEventListener("click", () => {
+          modal.style.display = "flex";
+          modalImg.src = "images/layout-tempat-makan-arjowinangun.jpg";
+        });
+
+        closeBtn.addEventListener("click", () => modal.style.display = "none");
+        modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+      });
+
+      // Export Data Rumah Makan ke PDF
+      function exportDataToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc
+          .setFontSize(20)
+          .setTextColor(26, 115, 232)
+          .text("DATA RUMAH MAKAN", 105, 20, { align: "center" });
+        doc
+          .setFontSize(12)
+          .setTextColor(100, 100, 100)
+          .text("Kelurahan Arjowinangun, Kota Malang", 105, 28, {
+            align: "center",
+          });
+        doc
+          .setFontSize(10)
+          .text(
+            `Dicetak pada: ${new Date().toLocaleDateString("id-ID")}`,
+            105,
+            35,
+            { align: "center" }
+          );
+
+        const rows = facilitiesData.map((f, i) => [
+          i + 1,
+          f.nama,
+          f.alamat,
+          f.link,
+        ]);
+        doc.autoTable({
+          head: [["No", "Nama Rumah Makan", "Alamat", "Link Google Maps"]],
+          body: rows,
+          startY: 45,
+          theme: "grid",
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [26, 115, 232], textColor: 255 },
+        });
+        doc.save("Data_Rumah_Makan_Arjowinangun.pdf");
+      }
+
+      // Export Laporan Analisis ke PDF
+      function exportAnalysisToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc
+          .setFontSize(20)
+          .setTextColor(26, 115, 232)
+          .text("LAPORAN ANALISIS RUMAH MAKAN", 105, 20, {
+            align: "center",
+          });
+        doc
+          .setFontSize(12)
+          .setTextColor(100, 100, 100)
+          .text("Kelurahan Arjowinangun, Kota Malang", 105, 28, {
+            align: "center",
+          });
+
+        let y = 45;
+        doc.setFontSize(11).setTextColor(0).text("ANALISIS STATISTIK", 20, y);
+        y += 15;
+        doc.setFontSize(10);
+        doc.text(`Total Rumah Makan: ${facilitiesData.length} unit`, 25, y);
+        y += 8;
+        doc.text(`Kelurahan: Arjowinangun`, 25, y);
+        y += 7;
+        doc.text(`Kecamatan: Kedungkandang`, 25, y);
+        y += 7;
+        doc.text(`Kota: Malang`, 25, y);
+
+        doc.setFontSize(11).text("ANALISIS SPASIAL & REKOMENDASI", 20, y + 10);
+        const points = [
+          "• Terdapat 10 rumah makan yang tersebar di Kelurahan Arjowinangun",
+          "• Distribusi terkonsentrasi di sekitar jalan utama (Jl. Raya Arjowinangun)",
+          "• Aksesibilitas baik karena dekat dengan jaringan jalan utama",
+          "• Potensi pengembangan ekonomi lokal sektor kuliner tinggi",
+          "• Rekomendasi: Pemetaan lanjutan untuk identifikasi zona potensial",
+        ];
+        y += 20;
+        points.forEach((p) => {
+          doc.text(p, 25, y);
+          y += 8;
+        });
+
+        doc.save("Laporan_Analisis_Rumah_Makan_Arjowinangun.pdf");
+      }
+    </script>
+  </body>
+</html>
